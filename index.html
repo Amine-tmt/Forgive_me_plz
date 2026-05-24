@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>will you forgive me</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Indie+Flower&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #fff5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Comic Neue', cursive;
+      overflow: hidden;
+      cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><text y='28' font-size='28'>🐾</text></svg>") 16 16, auto;
+    }
+
+    /* ── wiggly background blobs ── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: .35;
+      pointer-events: none;
+      animation: blobDrift 9s ease-in-out infinite alternate;
+    }
+    .blob-1 { width:420px; height:420px; background:#ffb3c6; top:-120px; left:-80px; animation-delay:0s; }
+    .blob-2 { width:300px; height:300px; background:#ffd6e0; bottom:-80px; right:-60px; animation-delay:-4s; }
+    .blob-3 { width:200px; height:200px; background:#ffccd5; top:40%; left:60%; animation-delay:-2s; }
+    @keyframes blobDrift {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(30px,20px) scale(1.08); }
+    }
+
+    /* ── main wrapper ── */
+    .wrapper {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      animation: popIn .6s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes popIn {
+      from { opacity:0; transform: scale(.5) rotate(-4deg); }
+      to   { opacity:1; transform: scale(1) rotate(0deg); }
+    }
+
+    /* ── cat GIF ──
+       PASTE YOUR CAT GIF URL in the <img> tag below
+    ── */
+    .cat-img {
+      width: 220px;
+      /* wiggle constantly so it feels alive */
+      animation: catWiggle 1.8s ease-in-out infinite;
+      filter: drop-shadow(0 8px 24px rgba(255,100,130,.25));
+      border-radius: 16px;
+    }
+    @keyframes catWiggle {
+      0%,100% { transform: rotate(-3deg) translateY(0); }
+      50%      { transform: rotate(3deg)  translateY(-8px); }
+    }
+
+    /* ── text ── */
+    .question {
+      font-family: 'Indie Flower', cursive;
+      font-size: clamp(2rem, 7vw, 3.4rem);
+      color: #d63f6a;
+      text-align: center;
+      margin-top: 1.2rem;
+      line-height: 1.2;
+      text-shadow: 2px 3px 0 #ffb3c6;
+      animation: wobble 3s ease-in-out infinite;
+    }
+    @keyframes wobble {
+      0%,100% { transform: rotate(-1deg); }
+      50%      { transform: rotate(1.5deg); }
+    }
+
+    /* ── buttons ── */
+    .btns {
+      display: flex;
+      gap: 1.2rem;
+      margin-top: 1.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: .75rem 2rem;
+      border: none;
+      border-radius: 999px;
+      font-family: 'Comic Neue', cursive;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 5px 0 rgba(0,0,0,.12);
+    }
+    .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.12); }
+
+    .btn-yes {
+      background: #ff6b8a;
+      color: #fff;
+      animation: yesPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes yesPulse {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.06); }
+    }
+    .btn-yes:hover { background: #ff4d73; }
+
+    .btn-no {
+      background: #ffe0e8;
+      color: #d63f6a;
+      position: absolute; /* will be moved by JS */
+    }
+    .btn-no:hover { background: #ffc8d6; }
+
+    /* ── reaction screen ── */
+    #reaction {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both;
+      z-index: 10;
+      position: relative;
+    }
+    .reaction-text {
+      font-family: 'Indie Flower', cursive;
+      font-size: clamp(1.8rem, 6vw, 3rem);
+      color: #d63f6a;
+      text-align: center;
+      text-shadow: 2px 3px 0 #ffb3c6;
+    }
+    .hearts-burst {
+      font-size: 2.5rem;
+      letter-spacing: .5rem;
+      animation: heartsBounce .6s ease-in-out infinite alternate;
+    }
+    @keyframes heartsBounce {
+      from { transform: scale(1); }
+      to   { transform: scale(1.2); }
+    }
+
+    /* ── flying emoji on click ── */
+    .fly {
+      position: fixed;
+      pointer-events: none;
+      font-size: 1.8rem;
+      z-index: 999;
+      animation: flyUp 1.4s ease-out forwards;
+    }
+    @keyframes flyUp {
+      0%   { opacity:1; transform: translate(0,0) scale(1) rotate(0deg); }
+      100% { opacity:0; transform: translate(var(--tx), -280px) scale(.3) rotate(var(--rot)); }
+    }
+
+    /* ── YouTube iframe hidden (audio only trick) ── */
+    #ytPlayer { position:fixed; width:1px; height:1px; left:-9999px; top:-9999px; }
+
+    /* ── small note at bottom ── */
+    .note {
+      position: fixed;
+      bottom: 1rem;
+      font-size: .75rem;
+      color: #ffaabb;
+      font-family: 'Comic Neue', cursive;
+      letter-spacing: .03rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- background blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- hidden YouTube player (starts at second 57) -->
+  <div id="ytPlayer"></div>
+
+  <!-- main screen -->
+  <div class="wrapper" id="mainScreen">
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  CAT GIF — paste your URL below     ║
+         ╚══════════════════════════════════════╝ -->
+    <img class="cat-img"
+         src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExcWY5MXloOGhyNGRnbGRteXFoZzY4ZWwwdHhjbG9uNzQ3czdwYnQ3eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UrhRmF81nrHG3cBIqO/giphy.gif"
+         alt="begging cat"
+    />
+    <!-- ↑ replace the src with your own GIF link ↑ -->
+
+    <p class="question">will you forgive me? 🥺</p>
+
+    <div class="btns" id="btnArea">
+      <button class="btn btn-yes" onclick="onYes()">yes 💗</button>
+      <button class="btn btn-no"  id="noBtn" onmouseover="runAway()" ontouchstart="runAway()">no</button>
+    </div>
+
+  </div>
+
+  <!-- reaction screen (shown after YES) -->
+  <div id="reaction">
+    <img class="cat-img"
+         src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGV0dDQ4NXcwcDRiemw4aHd4d2JqZm5xb3ZnMTN3dTYwaW5wYzh2OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/T70hpBP1L0N7U0jtkq/giphy.gif"
+         alt="happy cat"
+         style="animation-duration:.9s;"
+    />
+    <p class="reaction-text">yayyyy i knew it!! 🎉</p>
+    <p class="hearts-burst">💗 💗 💗</p>
+  </div>
+
+  <p class="note">click anywhere to start the music 🎵</p>
+
+<script>
+  /* ══════════════════════════════════════════
+     YOUTUBE PLAYER — starts at second 57
+     Video ID extracted from your link:
+     https://youtu.be/iaa4aN3jSLA  →  iaa4aN3jSLA
+  ══════════════════════════════════════════ */
+  const VIDEO_ID  = 'iaa4aN3jSLA';
+  const START_SEC = 57;
+
+  let player;
+  let playerReady = false;
+
+  // Load YouTube IFrame API
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+
+  window.onYouTubeIframeAPIReady = function () {
+    player = new YT.Player('ytPlayer', {
+      videoId: VIDEO_ID,
+      playerVars: {
+        start:    START_SEC,
+        autoplay: 1,
+        controls: 0,
+        loop:     1,
+        playlist: VIDEO_ID,
+        mute:     0,
+      },
+      events: {
+        onReady: (e) => {
+          playerReady = true;
+          e.target.setVolume(70);
+          e.target.playVideo();   // may be blocked until interaction
+        }
+      }
+    });
+  };
+
+  // Fallback: play on first user interaction
+  function unlockAudio() {
+    if (playerReady) {
+      try { player.unMute(); player.playVideo(); } catch(e) {}
+    }
+    document.removeEventListener('click',      unlockAudio);
+    document.removeEventListener('touchstart', unlockAudio);
+  }
+  document.addEventListener('click',      unlockAudio);
+  document.addEventListener('touchstart', unlockAudio);
+
+  /* ══════════════════════════════════════════
+     NO BUTTON — runs away from cursor
+  ══════════════════════════════════════════ */
+  let noCount = 0;
+  function runAway() {
+    noCount++;
+    const btn  = document.getElementById('noBtn');
+    const area = document.getElementById('btnArea');
+    const W = window.innerWidth, H = window.innerHeight;
+    const bw = btn.offsetWidth, bh = btn.offsetHeight;
+    const x = Math.random() * (W - bw);
+    const y = Math.random() * (H - bh);
+    btn.style.position = 'fixed';
+    btn.style.left = x + 'px';
+    btn.style.top  = y + 'px';
+    btn.style.margin = '0';
+    // after 4 dodges, shrink the button to tiny
+    if (noCount >= 4) {
+      btn.style.fontSize = '.5rem';
+      btn.style.padding  = '.3rem .6rem';
+    }
+  }
+
+  /* ══════════════════════════════════════════
+     YES BUTTON
+  ══════════════════════════════════════════ */
+  function onYes() {
+    // emoji burst
+    const emojis = ['💗','🌸','✨','🎉','💕','🥳','😻'];
+    for (let i = 0; i < 20; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'fly';
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        el.style.left = (20 + Math.random() * 60) + 'vw';
+        el.style.top  = (30 + Math.random() * 40) + 'vh';
+        el.style.setProperty('--tx', (Math.random()*160 - 80) + 'px');
+        el.style.setProperty('--rot', (Math.random()*360) + 'deg');
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1500);
+      }, i * 60);
+    }
+
+    // swap screens
+    setTimeout(() => {
+      document.getElementById('mainScreen').style.display = 'none';
+      const r = document.getElementById('reaction');
+      r.style.display = 'flex';
+    }, 400);
+  }
+</script>
+</body>
+</html>
